@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
+    <default>
+        <simpledeliverydate>
+            <pablobae_deliverydate_general>
+                <status>0</status>
+                <process_order_today_time_limit>23,59,59</process_order_today_time_limit>
+                <show_time_limit>0</show_time_limit>
+            </pablobae_deliverydate_general>
+        </simpledeliverydate>
+    </default>
+</config>

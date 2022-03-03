@@ -1,0 +1,30 @@
+{
+    "name": "pablobae/magento2-simple-delivery-date",
+    "description": "Simple DeliveryDate extension for Magento 2",
+    "type": "magento2-module",
+    "version": "1.0.1",
+    "authors": [
+        {
+            "name": "Pablo Baenas",
+            "email": "hi@pablobaenas.com",
+            "homepage": "https://www.pablobaenas.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {
+        "php": "~5.6.0|~7.0.0|~7.1.0|~7.2.0|~7.3.0|~7.4.0",
+        "magento/framework": "100.*"
+    },
+    "license": [
+        "OSL-3.0",
+        "AFL-3.0"
+    ],
+    "autoload": {
+        "psr-4": {
+            "Pablobae\\SimpleDeliveryDate\\": ""
+        },
+        "files": [
+            "registration.php"
+        ]
+    }
+}

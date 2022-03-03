@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<page layout="1column" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+
+        <referenceContainer name="product.info.main">
+            <container name="deliverydate.container" htmlTag="div" htmlClass="deliver-date-container-container"
+                       after="product.info">
+                <block class="Pablobae\SimpleDeliveryDate\Block\Product\DeliveryDate" name="product.deliverydate"
+                       as="deliveryDate" template="Pablobae_SimpleDeliveryDate::product/deliverydate.phtml">
+                </block>
+            </container>
+        </referenceContainer>
+
+    </body>
+</page>

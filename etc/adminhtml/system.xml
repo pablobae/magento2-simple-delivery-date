@@ -1,0 +1,68 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
+    <system>
+        <tab id="pablobae" translate="label" sortOrder="10">
+            <label>Pablobae</label>
+        </tab>
+        <section id="simpledeliverydate" showInDefault="1" showInWebsite="1" showInStore="1" translate="label"
+                 sortOrder="10">
+            <label>Simple Delivery Date</label>
+            <tab>pablobae</tab>
+            <resource>Pablobae_SimpleDeliveryDate::simpledeliverydate_configuration</resource>
+            <group id="pablobae_deliverydate_general" translate="label comment" showInDefault="1" showInWebsite="1"
+                   showInStore="1" sortOrder="10">
+                <label>General Settings</label>
+
+                <field id="status" type="select" translate="label"
+                       showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="10">
+                    <label>Status</label>
+                    <comment>Enable or disable the Delivery Datey extension</comment>
+                    <source_model>Magento\Config\Model\Config\Source\Enabledisable</source_model>
+                    <validate>required-entry</validate>
+                </field>
+
+                <field id="working_days" translate="label" type="multiselect" showInDefault="1" showInWebsite="1"
+                       showInStore="1" sortOrder="10">
+                    <label>Working Days</label>
+                    <source_model>Magento\Config\Model\Config\Source\Locale\Weekdays</source_model>
+                    <validate>required-entry</validate>
+                </field>
+
+                <field id="process_order_today_time_limit" type="time" translate="label"
+                       showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="10">
+                    <label>Time limit to process order same day</label>
+                </field>
+
+                <field id="delivery_days" translate="label" type="multiselect" showInDefault="1" showInWebsite="1"
+                       showInStore="1" sortOrder="10">
+                    <label>Delivery Days</label>
+                    <source_model>Magento\Config\Model\Config\Source\Locale\Weekdays</source_model>
+                    <validate>required-entry</validate>
+                </field>
+
+                <field id="days_needed_for_delivery" type="text" translate="label"
+                       showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="10">
+                    <label>Days needed for delivery</label>
+                    <validate>required-entry validate-integer</validate>
+                </field>
+
+                <field id="show_time_limit" type="select" translate="label"
+                       showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="10">
+                    <label>Show Time limit</label>
+                    <comment>Display the time limit value in the shipping information</comment>
+                    <source_model>Magento\Config\Model\Config\Source\Enabledisable</source_model>
+                    <validate>required-entry</validate>
+                </field>
+
+                <field id="dynamic_field_excluded_dates" translate="label" showInDefault="1" showInWebsite="1"
+                       showInStore="1" sortOrder="10">
+                    <label>Holidays/Exclude Days/Blackout Days</label>
+                    <backend_model>Pablobae\SimpleDeliveryDate\Block\Adminhtml\Config\Backend\ArraySerializedHolidays</backend_model>
+                    <frontend_model>Pablobae\SimpleDeliveryDate\Block\Adminhtml\DynamicFieldHolidays</frontend_model>
+                </field>
+
+            </group>
+        </section>
+    </system>
+</config>
