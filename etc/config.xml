@@ -3,11 +3,19 @@
         xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
     <default>
         <simpledeliverydate>
-            <pablobae_deliverydate_general>
+            <general>
                 <status>0</status>
+            </general>
+            <processing_settings>
                 <process_order_today_time_limit>23,59,59</process_order_today_time_limit>
+            </processing_settings>
+            <delivery_settings>
+                <enable_open_delivery_date>0</enable_open_delivery_date>
+                <open_delivery_range_days>1</open_delivery_range_days>
+            </delivery_settings>
+            <frontend>
                 <show_time_limit>0</show_time_limit>
-            </pablobae_deliverydate_general>
+            </frontend>
         </simpledeliverydate>
     </default>
 </config>

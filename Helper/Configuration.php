@@ -17,14 +17,27 @@ use Magento\Framework\Serialize\SerializerInterface;
 class Configuration extends AbstractHelper
 {
     const XML_PATH_SECTION = 'simpledeliverydate/';
-    const XML_PATH_GROUP_GENERAL = 'pablobae_deliverydate_general/';
+    const XML_PATH_GROUP_GENERAL = 'general/';
+    const XML_PATH_GROUP_PROCESSING = 'processing_settings/';
+    const XML_PATH_GROUP_DELIVERY = 'delivery_settings/';
+    const XML_PATH_GROUP_FRONTEND = 'frontend/';
+
     const XML_PATH_FIELD_STATUS = 'status';
-    const XML_PATH_FIELD_PROCESS_ORDER_TODAY_TIME_LIMIT = 'process_order_today_time_limit';
-    const XML_PATH_FIELD_DAYS_NEEDED_FOR_DELIVERY = 'days_needed_for_delivery';
-    const XML_PATH_FIELD_SHOW_TIME_LIMIT = 'show_time_limit';
-    const XML_PATH_FIELD_EXCLUDED_DATES = 'dynamic_field_excluded_dates';
+
     const XML_PATH_FIELD_WORKING_DAYS = 'working_days';
+    const XML_PATH_FIELD_DAYS_NEEDED_FOR_PROCESSING = 'days_needed_for_processing_the_order';
+    const XML_PATH_FIELD_PROCESS_ORDER_TODAY_TIME_LIMIT = 'process_order_today_time_limit';
+    const XML_PATH_FIELD_EXCLUDED_PROCESSING_DATES = 'excluded_processing_dates';
+
     const XML_PATH_FIELD_DAYS_WITH_DELIVERY = 'delivery_days';
+    const XML_PATH_FIELD_DAYS_NEEDED_FOR_DELIVERY = 'days_needed_for_delivery';
+    const XML_PATH_FIELD_ENABLE_OPEN_DELIVERY_DATE = 'enable_open_delivery_date';
+    const XML_PATH_FIELD_OPEN_DELIVERY_RANGE_DAYS = 'open_delivery_range_days';
+    const XML_PATH_FIELD_USE_EXCLUDED_PROCESSING_DATES_AS_EXCLUDED_DELIVERY_DATES = 'use_excluded_processing_dates_as_excluded_delivery_dates';
+    const XML_PATH_FIELD_EXCLUDED_DELIVERY_DATES = 'excluded_delivery_dates';
+
+
+    const XML_PATH_FIELD_SHOW_TIME_LIMIT = 'show_time_limit';
 
 
     /**
@@ -60,7 +73,7 @@ class Configuration extends AbstractHelper
      * @param int|null $storeId
      * @return mixed
      */
-    public function getConfigValue(string $fieldPath, int $storeId = null)
+    protected function getConfigValue(string $fieldPath, int $storeId = null)
     {
         return $this->scopeConfig->getValue(
             $fieldPath,
@@ -70,49 +83,140 @@ class Configuration extends AbstractHelper
     }
 
     /**
+     * Retrieve a boolean system field config value
+     *
+     * @param string $fieldPath
+     * @param bool $defaultValue
+     * @return bool
+     */
+    protected function getBoolConfigValue(string $fieldPath, bool $defaultValue = false): bool
+    {
+        $fieldValue = $defaultValue;
+
+        try {
+            $storeId = $this->storeManager->getStore()->getId();
+            $value = $this->getConfigValue($fieldPath, (int)$storeId);
+            if ($value !== null) {
+                $fieldValue = (bool)$value;
+            }
+        } catch (NoSuchEntityException $e) {
+            $this->_logger->critical($e->getMessage());
+        }
+        return $fieldValue;
+    }
+
+
+    /**
+     * Retrieves a boolean system field config value
+     *
+     * @param string $fieldPath
+     * @param int $defaultValue
+     * @return int
+     */
+    protected function getIntConfigValue(string $fieldPath, int $defaultValue = 0): int
+    {
+        $intValue = $defaultValue;
+        try {
+            $storeId = $this->storeManager->getStore()->getId();
+            $value = $this->getConfigValue($fieldPath, (int)$storeId);
+            if ($value !== null) {
+                $intValue = (int)$value;
+            }
+        } catch (NoSuchEntityException $e) {
+            $this->_logger->critical($e->getMessage());
+        }
+        return $intValue;
+    }
+
+
+    /**
+     * Retrieves array from string config value (multiselect,...)
+     *
+     * @param string $fieldPath
+     * @param string $separator
+     * @return array
+     */
+    protected function getArrayFromStringConfigValue(string $fieldPath, string $separator = ','): array
+    {
+        $data = [];
+        try {
+            $storeId = $this->storeManager->getStore()->getId();
+            $value = $this->getConfigValue($fieldPath, (int)$storeId);
+            if ($value !== null) {
+                $data = explode($separator, $value);
+            }
+        } catch (NoSuchEntityException $e) {
+            $this->_logger->critical($e->getMessage());
+        }
+        return $data;
+    }
+
+
+    /**
+     * Retrieve excluded dates
+     *
+     * @param string $fieldPath
+     * @return array
+     */
+    protected function getExcludedDates(string $fieldPath): array
+    {
+        $excludedDates = [];
+
+        try {
+            $storeId = $this->storeManager->getStore()->getId();
+            $value = $this->getConfigValue($fieldPath, (int)$storeId);
+            if ($value !== null) {
+                $excludedDates = $this->getDatesFromSerializedDates($value);
+            }
+        } catch (NoSuchEntityException $e) {
+            $this->_logger->critical($e->getMessage());
+        }
+        return $excludedDates;
+    }
+
+
+
+    /** GENERAL GROUP   **/
+
+
+    /**
      * Retrieve if the extension is enabled
      *
      * @return bool
      */
     public function isEnabled(): bool
     {
-        $isEnabled = false;
         $fieldPath = self::XML_PATH_SECTION . self::XML_PATH_GROUP_GENERAL . self::XML_PATH_FIELD_STATUS;
+        return $this->getBoolConfigValue($fieldPath);
+    }
 
-        try {
-            $storeId = $this->storeManager->getStore()->getId();
-            $value = $this->getConfigValue($fieldPath, (int)$storeId);
-            if ($value !== null) {
-                $isEnabled = (bool)$value;
-            }
-        } catch (NoSuchEntityException $e) {
-            $this->_logger->critical($e->getMessage());
-        }
-        return $isEnabled;
+
+    /** GENERAL GROUP   **/
+
+
+    /**
+     * Retrieve the list of working days
+     *
+     * @return array
+     */
+    public function getWorkingDays(): array
+    {
+        $fieldPath = self::XML_PATH_SECTION . self::XML_PATH_GROUP_PROCESSING . self::XML_PATH_FIELD_WORKING_DAYS;
+        return $this->getArrayFromStringConfigValue($fieldPath);
     }
 
 
     /**
-     * Retrieve Show time limit config value
+     * Retrieve number of days needed for delivery
      *
-     * @return bool
+     * @return int
      */
-    public function showTimeLimit(): bool
+    public function getDaysNeededForProcessing(): int
     {
-        $showTimeLimit = false;
-        $fieldPath = self::XML_PATH_SECTION . self::XML_PATH_GROUP_GENERAL . self::XML_PATH_FIELD_SHOW_TIME_LIMIT;
-
-        try {
-            $storeId = $this->storeManager->getStore()->getId();
-            $value = $this->getConfigValue($fieldPath, (int)$storeId);
-            if ($value !== null) {
-                $showTimeLimit = (bool)$value;
-            }
-        } catch (NoSuchEntityException $e) {
-            $this->_logger->critical($e->getMessage());
-        }
-        return $showTimeLimit;
+        $fieldPath = self::XML_PATH_SECTION . self::XML_PATH_GROUP_PROCESSING . self::XML_PATH_FIELD_DAYS_NEEDED_FOR_PROCESSING;
+        return $this->getIntConfigValue($fieldPath);
     }
+
 
     /**
      * Retrieve process order today time limit value
@@ -122,7 +226,7 @@ class Configuration extends AbstractHelper
     public function getProcessOrderTodayTimeLimit(): string
     {
         $timeLimit = '23:59:59';
-        $fieldPath = self::XML_PATH_SECTION . self::XML_PATH_GROUP_GENERAL . self::XML_PATH_FIELD_PROCESS_ORDER_TODAY_TIME_LIMIT;
+        $fieldPath = self::XML_PATH_SECTION . self::XML_PATH_GROUP_PROCESSING . self::XML_PATH_FIELD_PROCESS_ORDER_TODAY_TIME_LIMIT;
 
         try {
             $storeId = $this->storeManager->getStore()->getId();
@@ -136,27 +240,105 @@ class Configuration extends AbstractHelper
         return $timeLimit;
     }
 
+
     /**
      * Retrieve excluded dates
      *
      * @return array
      */
-    public function getExcludedDates(): array
+    public function getExcludedProcessingDates(): array
     {
-        $excludedDates = [];
-        $fieldPath = self::XML_PATH_SECTION . self::XML_PATH_GROUP_GENERAL . self::XML_PATH_FIELD_EXCLUDED_DATES;
-
-        try {
-            $storeId = $this->storeManager->getStore()->getId();
-            $value = $this->getConfigValue($fieldPath, (int)$storeId);
-            if ($value !== null) {
-                $excludedDates = $this->getDatesFromSerializedDates($value);
-            }
-        } catch (NoSuchEntityException $e) {
-            $this->_logger->critical($e->getMessage());
-        }
-        return $excludedDates;
+        $fieldPath = self::XML_PATH_SECTION . self::XML_PATH_GROUP_PROCESSING . self::XML_PATH_FIELD_EXCLUDED_PROCESSING_DATES;
+        return $this->getExcludedDates($fieldPath);
     }
+
+
+
+    /** DELIVERY SETTINGS */
+
+    /**
+     * Days with Delivery
+     */
+    public function getDeliveryDays(): array
+    {
+        $fieldPath = self::XML_PATH_SECTION . self::XML_PATH_GROUP_DELIVERY . self::XML_PATH_FIELD_DAYS_WITH_DELIVERY;
+        return $this->getArrayFromStringConfigValue($fieldPath);
+    }
+
+
+    /**
+     * Retrieve number of days needed for delivery
+     *
+     * @return int
+     */
+    public function getDaysNeededForDelivery(): int
+    {
+        $fieldPath = self::XML_PATH_SECTION . self::XML_PATH_GROUP_DELIVERY . self::XML_PATH_FIELD_DAYS_NEEDED_FOR_DELIVERY;
+        return $this->getIntConfigValue($fieldPath);
+    }
+
+    /**
+     * Retrieves if the Open delivery date feature is enable
+     *
+     * @return bool
+     */
+    public function isOpenDeliveryDateEnabled(): bool
+    {
+        $fieldPath = self::XML_PATH_SECTION . self::XML_PATH_GROUP_DELIVERY . self::XML_PATH_FIELD_ENABLE_OPEN_DELIVERY_DATE;
+        return $this->getBoolConfigValue($fieldPath);
+    }
+
+    /**
+     * Retrieves open delivery range days value
+     *
+     * @return int
+     */
+    public function getOpenDeliveryRangeDays(): int
+    {
+        $fieldPath = self::XML_PATH_SECTION . self::XML_PATH_GROUP_DELIVERY . self::XML_PATH_FIELD_OPEN_DELIVERY_RANGE_DAYS;
+        return $this->getIntConfigValue($fieldPath);
+    }
+
+
+    /**
+     * Retrieves use excluded processing dates as excluded delivery dates config value
+     *
+     * @return bool
+     */
+    public function useExcludedProcessingDatesAsExcludedDeliveryDates(): bool
+    {
+        $fieldPath = self::XML_PATH_SECTION . self::XML_PATH_GROUP_DELIVERY . self::XML_PATH_FIELD_USE_EXCLUDED_PROCESSING_DATES_AS_EXCLUDED_DELIVERY_DATES;
+        return $this->getBoolConfigValue($fieldPath);
+    }
+
+
+    /**
+     * Retrieves excluded delivery dates
+     *
+     * @return array
+     */
+    public function getExcludedDeliveryDates(): array
+    {
+        $fieldPath = self::XML_PATH_SECTION . self::XML_PATH_GROUP_DELIVERY . self::XML_PATH_FIELD_EXCLUDED_DELIVERY_DATES;
+        return $this->getExcludedDates($fieldPath);
+    }
+
+
+    /**** FRONTEND SETTINGS ****/
+
+    /**
+     * Retrieve Show time limit config value
+     *
+     * @return bool
+     */
+    public function showTimeLimit(): bool
+    {
+        $fieldPath = self::XML_PATH_SECTION . self::XML_PATH_GROUP_FRONTEND . self::XML_PATH_FIELD_SHOW_TIME_LIMIT;
+        return $this->getBoolConfigValue($fieldPath);
+    }
+
+
+    /** Misc */
 
     /**
      * Transforms serialized date string into Datetime objects
@@ -182,70 +364,5 @@ class Configuration extends AbstractHelper
             }
         }
         return $dates;
-    }
-
-    /**
-     * Retrieve number of days needed for delivery
-     *
-     * @return int
-     */
-    public function getDaysNeededForDelivery(): int
-    {
-        $days = 0;
-        $fieldPath = self::XML_PATH_SECTION . self::XML_PATH_GROUP_GENERAL . self::XML_PATH_FIELD_DAYS_NEEDED_FOR_DELIVERY;
-
-        try {
-            $storeId = $this->storeManager->getStore()->getId();
-            $value = $this->getConfigValue($fieldPath, (int)$storeId);
-            if ($value !== null) {
-                $days = (int)$value;
-            }
-        } catch (NoSuchEntityException $e) {
-            $this->_logger->critical($e->getMessage());
-        }
-        return $days;
-    }
-
-
-    /**
-     * Days with Delivery
-     *
-     */
-    public function getWorkingDays()
-    {
-        $workingDays = [];
-        $fieldPath = self::XML_PATH_SECTION . self::XML_PATH_GROUP_GENERAL . self::XML_PATH_FIELD_WORKING_DAYS;
-
-        try {
-            $storeId = $this->storeManager->getStore()->getId();
-            $value = $this->getConfigValue($fieldPath, (int)$storeId);
-            if ($value !== null) {
-                $workingDays = explode(',',$value);
-            }
-        } catch (NoSuchEntityException $e) {
-            $this->_logger->critical($e->getMessage());
-        }
-        return $workingDays;
-    }
-
-    /**
-     * Days with Delivery
-     *
-     */
-    public function getDeliveryDays()
-    {
-        $deliveryDays = [];
-        $fieldPath = self::XML_PATH_SECTION . self::XML_PATH_GROUP_GENERAL . self::XML_PATH_FIELD_DAYS_WITH_DELIVERY;
-
-        try {
-            $storeId = $this->storeManager->getStore()->getId();
-            $value = $this->getConfigValue($fieldPath, (int)$storeId);
-            if ($value !== null) {
-                $deliveryDays = explode(',',$value);
-            }
-        } catch (NoSuchEntityException $e) {
-            $this->_logger->critical($e->getMessage());
-        }
-        return $deliveryDays;
     }
 }

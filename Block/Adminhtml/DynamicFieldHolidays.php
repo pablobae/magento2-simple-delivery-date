@@ -3,6 +3,8 @@
 namespace Pablobae\SimpleDeliveryDate\Block\Adminhtml;
 
 use Magento\Config\Block\System\Config\Form\Field\FieldArray\AbstractFieldArray;
+use Magento\Framework\Data\Form\Element\AbstractElement;
+use Magento\Framework\DataObject;
 
 
 class DynamicFieldHolidays extends AbstractFieldArray
@@ -26,11 +28,11 @@ class DynamicFieldHolidays extends AbstractFieldArray
      * Prepare existing row data object
      * Convert backend date format "2018-01-12" to front format "12/01/2018"
      *
-     * @param \Magento\Framework\DataObject $row
+     * @param DataObject $row
      * @return void
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
-    protected function _prepareArrayRow(\Magento\Framework\DataObject $row)
+    protected function _prepareArrayRow(DataObject $row)
     {
         $key = 'date';
         if (!isset($row[$key])) return;
@@ -43,17 +45,16 @@ class DynamicFieldHolidays extends AbstractFieldArray
             $columnValues[$this->_getCellInputElementId($rowId, $key)] = $renderedDate;
             $row['column_values'] = $columnValues;
         } catch (\Exception $e) {
-            // Just skipping error values
         }
     }
 
     /**
      * Get the grid and scripts contents
      *
-     * @param \Magento\Framework\Data\Form\Element\AbstractElement $element
+     * @param AbstractElement $element
      * @return string
      */
-    protected function _getElementHtml(\Magento\Framework\Data\Form\Element\AbstractElement $element)
+    protected function _getElementHtml(AbstractElement $element)
     {
         $html = parent::_getElementHtml($element);
 

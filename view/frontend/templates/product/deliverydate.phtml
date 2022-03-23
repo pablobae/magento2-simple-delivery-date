@@ -1,4 +1,5 @@
 <?php
+
 use Pablobae\SimpleDeliveryDate\Block\Product\DeliveryDate;
 
 /**
@@ -6,8 +7,8 @@ use Pablobae\SimpleDeliveryDate\Block\Product\DeliveryDate;
  */
 
 if ($block->isEnableDeliveryDate()) {
-    $dates = $block->getDeliveryDates();
-    if (count($dates) == 2) {
+    $dates = $block->getDeliveryInformation();
+    if (!empty($dates)) {
         ?>
         <div class="container-info-box delivery-date">
             <?php if ($block->showTimeLimit()) {
@@ -17,12 +18,20 @@ if ($block->isEnableDeliveryDate()) {
 
             <?php } else { ?>
                 <span><?= $block->escapeHtml(__('Buy now and receive your order')) ?></span>
+            <?php }
+
+            if ($block->isOpenDeliveryDateEnabled()) { ?>
+                <?= $block->escapeHtml(__(' between ')) ?>
+                <span
+                    class="deliverydate"><?= $block->escapeHtml(__($dates[0]->format('D'))) . ' ' . $block->escapeHtml(__($dates[0]->format('d'))) . ' ' . $block->escapeHtml(__('of')) . ' ' . $block->escapeHtml(__($dates[0]->format('F'))); ?></span>
+                <?= $block->escapeHtml(__(' and ')) ?> <span
+                    class="deliverydate"><?= $block->escapeHtml(__($dates[1]->format('D'))) . ' ' . $block->escapeHtml(__($dates[1]->format('d'))) . ' ' . $block->escapeHtml(__('of')) . ' ' . $block->escapeHtml(__($dates[1]->format('F'))); ?></span>
+            <?php } else { ?>
+                <?= $block->escapeHtml(__(' on ')) ?>
+                <span
+                    class="deliverydate"><?= $block->escapeHtml(__($dates[0]->format('D'))) . ' ' . $block->escapeHtml(__($dates[0]->format('d'))) . ' ' . $block->escapeHtml(__('of')) . ' ' . $block->escapeHtml(__($dates[0]->format('F'))); ?></span>
             <?php } ?>
-            <?= $block->escapeHtml(__(' between ')) ?>
-            <span
-                class="deliverydate"><?= $block->escapeHtml(__($dates[0]->format('D'))) . ' ' . $block->escapeHtml(__($dates[0]->format('d'))) . ' ' . $block->escapeHtml(__('of')) . ' ' . $block->escapeHtml(__($dates[0]->format('F'))); ?></span>
-            <?= $block->escapeHtml(__(' and ')) ?> <span
-                class="deliverydate"><?= $block->escapeHtml(__($dates[1]->format('D'))) . ' ' . $block->escapeHtml(__($dates[1]->format('d'))) . ' ' . $block->escapeHtml(__('of')) . ' ' . $block->escapeHtml(__($dates[1]->format('F'))); ?></span>
+
         </div>
         <?php
     }

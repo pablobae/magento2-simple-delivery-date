@@ -10,30 +10,56 @@
             <label>Simple Delivery Date</label>
             <tab>pablobae</tab>
             <resource>Pablobae_SimpleDeliveryDate::simpledeliverydate_configuration</resource>
-            <group id="pablobae_deliverydate_general" translate="label comment" showInDefault="1" showInWebsite="1"
+            <group id="general" translate="label comment" showInDefault="1" showInWebsite="1"
                    showInStore="1" sortOrder="10">
                 <label>General Settings</label>
 
                 <field id="status" type="select" translate="label"
                        showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="10">
                     <label>Status</label>
-                    <comment>Enable or disable the Delivery Datey extension</comment>
+                    <comment>Enable or disable the Delivery Date extension</comment>
                     <source_model>Magento\Config\Model\Config\Source\Enabledisable</source_model>
                     <validate>required-entry</validate>
                 </field>
-
+            </group>
+            <group id="processing_settings" translate="label comment" showInDefault="1" showInWebsite="1"
+                   showInStore="1" sortOrder="10">
+                <label>Order Processing Settings</label>
+                <depends>
+                    <field id="simpledeliverydate/general/status">1</field>
+                </depends>
                 <field id="working_days" translate="label" type="multiselect" showInDefault="1" showInWebsite="1"
                        showInStore="1" sortOrder="10">
                     <label>Working Days</label>
                     <source_model>Magento\Config\Model\Config\Source\Locale\Weekdays</source_model>
-                    <validate>required-entry</validate>
+                </field>
+
+                <field id="days_needed_for_processing_the_order" type="text" translate="label"
+                       showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="10">
+                    <label>Days needed for processing</label>
+                    <validate>required-entry validate-not-negative-number</validate>
+                    <comment>Number of days needed for preparing the order before sending it</comment>
                 </field>
 
                 <field id="process_order_today_time_limit" type="time" translate="label"
                        showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="10">
-                    <label>Time limit to process order same day</label>
+                    <label>Time limit for order processing</label>
                 </field>
 
+                <field id="excluded_processing_dates" translate="label" showInDefault="1" showInWebsite="1"
+                       showInStore="1" sortOrder="10">
+                    <label>Excluded Dates For Order Processing</label>
+                    <comment>Special days on which no orders are processed: Holidays/Exclude Days/Blackout Days</comment>
+                    <backend_model>Pablobae\SimpleDeliveryDate\Block\Adminhtml\Config\Backend\ArraySerializedHolidays</backend_model>
+                    <frontend_model>Pablobae\SimpleDeliveryDate\Block\Adminhtml\DynamicFieldHolidays</frontend_model>
+                </field>
+            </group>
+            <group id="delivery_settings" translate="label comment" showInDefault="1" showInWebsite="1"
+                   showInStore="1" sortOrder="10">
+                <label>Delivery Settings</label>
+                <depends>
+                    <field id="simpledeliverydate/general/status">1</field>
+                </depends>
                 <field id="delivery_days" translate="label" type="multiselect" showInDefault="1" showInWebsite="1"
                        showInStore="1" sortOrder="10">
                     <label>Delivery Days</label>
@@ -44,8 +70,56 @@
                 <field id="days_needed_for_delivery" type="text" translate="label"
                        showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="10">
                     <label>Days needed for delivery</label>
-                    <validate>required-entry validate-integer</validate>
+                    <validate>required-entry validate-not-negative-number</validate>
                 </field>
+
+                <field id="enable_open_delivery_date" type="select" translate="label"
+                       showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="10">
+                    <label>Open delivery date</label>
+                    <comment>Enables/disables the open delivery date with a range of days between which delivery will
+                        take place.
+                    </comment>
+                    <source_model>Magento\Config\Model\Config\Source\Enabledisable</source_model>
+                    <validate>required-entry</validate>
+                </field>
+
+                <field id="open_delivery_range_days" type="text" translate="label"
+                       showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="10">
+                    <label>Range days</label>
+                    <validate>required-entry validate-greater-than-zero validate-integer</validate>
+                    <comment>Range of days within which the order can be delivered</comment>
+                    <depends>
+                        <field id="simpledeliverydate/delivery_settings/enable_open_delivery_date">1</field>
+                    </depends>
+                </field>
+
+                <field id="use_excluded_processing_dates_as_excluded_delivery_dates" type="select" translate="label"
+                       showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="10">
+                    <label>Use excluded processing dates as excluded delivery dates</label>
+                    <comment>Allows to use dates excluded from order processing as dates on which orders are not delivered
+                    </comment>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <validate>required-entry</validate>
+                </field>
+
+                <field id="excluded_delivery_dates" translate="label" showInDefault="1" showInWebsite="1"
+                       showInStore="1" sortOrder="10">
+                    <label>Excluded Dates for Delivery</label>
+                    <comment>Special days on which no orders are delivered: Holidays/Exclude Days/Blackout Days</comment>
+                    <backend_model>Pablobae\SimpleDeliveryDate\Block\Adminhtml\Config\Backend\ArraySerializedHolidays</backend_model>
+                    <frontend_model>Pablobae\SimpleDeliveryDate\Block\Adminhtml\DynamicFieldHolidays</frontend_model>
+                    <depends>
+                        <field id="simpledeliverydate/delivery_settings/use_excluded_processing_dates_as_excluded_delivery_dates">0</field>
+                    </depends>
+                </field>
+            </group>
+
+            <group id="frontend" translate="label comment" showInDefault="1" showInWebsite="1"
+                   showInStore="1" sortOrder="10">
+                <label>Frontend Settings</label>
+                <depends>
+                    <field id="simpledeliverydate/general/status">1</field>
+                </depends>
 
                 <field id="show_time_limit" type="select" translate="label"
                        showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="10">
@@ -54,14 +128,6 @@
                     <source_model>Magento\Config\Model\Config\Source\Enabledisable</source_model>
                     <validate>required-entry</validate>
                 </field>
-
-                <field id="dynamic_field_excluded_dates" translate="label" showInDefault="1" showInWebsite="1"
-                       showInStore="1" sortOrder="10">
-                    <label>Holidays/Exclude Days/Blackout Days</label>
-                    <backend_model>Pablobae\SimpleDeliveryDate\Block\Adminhtml\Config\Backend\ArraySerializedHolidays</backend_model>
-                    <frontend_model>Pablobae\SimpleDeliveryDate\Block\Adminhtml\DynamicFieldHolidays</frontend_model>
-                </field>
-
             </group>
         </section>
     </system>

@@ -1,11 +1,12 @@
 <?php
+declare(strict_types=1);
 
 namespace Pablobae\SimpleDeliveryDate\Block\Product;
 
 use DateInterval;
 use DateTime;
+use Exception;
 use Magento\Framework\Stdlib\DateTime\TimezoneInterface;
-use Magento\Framework\View\Element\BlockInterface;
 use Pablobae\SimpleDeliveryDate\Helper\Configuration;
 use Magento\Framework\View\Element\Template;
 
@@ -23,7 +24,7 @@ class DeliveryDate extends Template
     /**
      * @var string
      */
-    private $excludedDates;
+    private $excludedProcessingDates;
     /**
      * @var int|mixed
      */
@@ -32,7 +33,11 @@ class DeliveryDate extends Template
      * @var mixed|string
      */
     private $workingDays;
-    private bool $sameDayProcessing;
+    /**
+     * @var array|string
+     */
+    private $excludedDeliveryDates;
+
 
     public function __construct(
         Configuration     $configuration,
@@ -44,11 +49,14 @@ class DeliveryDate extends Template
         $this->helperConfiguration = $configuration;
         $this->timezone = $timezone;
         parent::__construct($context, $data);
-        $this->excludedDates = $this->helperConfiguration->getExcludedDates();
+        $this->excludedProcessingDates = $this->helperConfiguration->getExcludedProcessingDates();
+        if ($this->helperConfiguration->useExcludedProcessingDatesAsExcludedDeliveryDates()) {
+            $this->excludedDeliveryDates = $this->excludedProcessingDates;
+        } else {
+            $this->excludedDeliveryDates = $this->helperConfiguration->getExcludedDeliveryDates();
+        }
         $this->workingDays = $this->helperConfiguration->getWorkingDays();
         $this->deliveryDays = $this->helperConfiguration->getDeliveryDays();
-        $this->sameDayProcessing = false;
-
     }
 
     public function isEnableDeliveryDate(): bool
@@ -66,17 +74,28 @@ class DeliveryDate extends Template
         return $this->helperConfiguration->getProcessOrderTodayTimeLimit();
     }
 
-    public function getDeliveryDates(): array
+    public function isOpenDeliveryDateEnabled(): bool
+    {
+        return $this->helperConfiguration->isOpenDeliveryDateEnabled();
+    }
+
+    /**
+     * @throws Exception
+     */
+    public function getDeliveryInformation(): array
     {
         $processOrderDateTime = $this->getEffectiveProcessOrderDate();
-        $daysNeededForDelivery = $this->helperConfiguration->getDaysNeededForDelivery();
-        $deliveryDateRange = $this->getDayDeliveryDateRange($processOrderDateTime, $daysNeededForDelivery);
-        $dates[] = $this->timezone->date(new DateTime($deliveryDateRange[0]));
-        $dates[] = $this->timezone->date(new DateTime($deliveryDateRange[1]));
-
+        $deliveryDates = $this->getDeliveryDates($processOrderDateTime);
+        $dates = [];
+        foreach ($deliveryDates as $deliveryDate) {
+            $dates[] = $this->timezone->date(new DateTime($deliveryDate));
+        }
         return $dates;
     }
 
+    /**
+     * @throws Exception
+     */
     private function getEffectiveProcessOrderDate(): DateTime
     {
         $processOrderDateTime = $this->timezone->date();
@@ -87,28 +106,39 @@ class DeliveryDate extends Template
         $orderTimeLimitDateTime = $this->timezone->date(new DateTime($year . '-' . $month . '-' . $day . ' ' . $processOrderTodayLimit));//->format('Y-m-d H:i:s');
         $timeOffSet = $orderTimeLimitDateTime->getOffset();
         $orderTimeLimitDateTime->sub(new DateInterval('PT' . $timeOffSet . 'S'));
-//        if (!$this->isWorkingDay($processOrderDateTime) || $processOrderDateTime > $orderTimeLimitDateTime) {
-//            $processOrderDateTime = $this->getNextWorkingDay($processOrderDateTime);
-//        }
-        if ($this->isWorkingDay($processOrderDateTime) && $processOrderDateTime < $orderTimeLimitDateTime) {
-            $this->sameDayProcessing = true;
-            return $processOrderDateTime;
-        }
 
-        do {
+        $daysNeededForProcessing = $this->helperConfiguration->getDaysNeededForProcessing();
+        if ($processOrderDateTime < $orderTimeLimitDateTime && $daysNeededForProcessing > 0) {
+            $daysNeededForProcessing--;
+        }
+        if (!$processOrderDateTime < $orderTimeLimitDateTime) {
+            $processOrderDateTime->add(new DateInterval('P1D'));
+        }
+        if ($daysNeededForProcessing > 0) {
+            $processOrderDateTime->add(new DateInterval('P' . $daysNeededForProcessing . 'D'));
+        }
+        while (!$this->isWorkingDay($processOrderDateTime)) {
             $processOrderDateTime = $this->getNextWorkingDay($processOrderDateTime);
-        } while (!$this->isWorkingDay($processOrderDateTime));
+        }
 
         return $processOrderDateTime;
 
     }
 
-    private function getDayDeliveryDateRange(Datetime $orderDate, int $daysNeededForDelivery): array
+    /**
+     * @throws Exception
+     */
+    private function getDeliveryDates(Datetime $orderDate): array
     {
         $dates = [];
-
-        $dates[] = $this->getNextDeliveryDay($orderDate)->format('Y-m-d H:i:s');
+        $daysNeededForDelivery = $this->helperConfiguration->getDaysNeededForDelivery();
         $dates[] = $this->getNextDeliveryDay($orderDate, $daysNeededForDelivery)->format('Y-m-d H:i:s');
+        if ($this->helperConfiguration->isOpenDeliveryDateEnabled()) {
+            $rangeDays = $this->helperConfiguration->getOpenDeliveryRangeDays();
+//            $rangeDays--;
+            $orderDate->add(new DateInterval('P' . $rangeDays . 'D'));
+            $dates[] = $this->getNextDeliveryDay($orderDate)->format('Y-m-d H:i:s');
+        }
         return $dates;
     }
 
@@ -130,29 +160,49 @@ class DeliveryDate extends Template
         return false;
     }
 
-    private function getNextDeliveryDay(DateTime $dateTime, int $numberOfDays = 1): DateTime
+    /**
+     * @throws Exception
+     */
+    private function getNextDeliveryDay(DateTime $dateTime, int $daysInterval = 0): DateTime
     {
-        $daysInterval = 'P' . $numberOfDays . 'D';
-        do {
-            $dateTime = $dateTime->add(new DateInterval($daysInterval));
-        } while (!$this->isDeliveryDay($dateTime) || $this->isExcludedDate($dateTime));
+        if ($daysInterval > 0) {
+            $dateInterval = 'P' . $daysInterval . 'D';
+            $dateTime = $dateTime->add(new DateInterval($dateInterval));
+        }
+        while (!$this->isDeliveryDay($dateTime) || $this->isExcludedDeliveryDate($dateTime)) {
+            $dateTime = $dateTime->add(new DateInterval('P1D'));
+        }
         return $dateTime;
     }
 
-    private function getNextWorkingDay(DateTime $dateTime, int $numberOfDays = 1): DateTime
+    /**
+     * @throws Exception
+     */
+    private function getNextWorkingDay(DateTime $dateTime): DateTime
     {
-        $daysInterval = 'P' . $numberOfDays . 'D';
-        do {
-            $dateTime = $dateTime->add(new DateInterval($daysInterval));
-        } while (!$this->isWorkingDay($dateTime) || $this->isExcludedDate($dateTime));
+        while (!$this->isWorkingDay($dateTime) || $this->isExcludedProcessingDate($dateTime)) {
+            $dateTime = $dateTime->add(new DateInterval('P1D'));
+        }
         return $dateTime;
     }
 
-    private function isExcludedDate($dateTime)
+    private function isExcludedProcessingDate($dateTime): bool
     {
         $date = $dateTime->format("d/m/Y");
 
-        foreach ($this->excludedDates as $excludedDate) {
+        foreach ($this->excludedProcessingDates as $excludedDate) {
+            if ($date == $excludedDate->format("d/m/Y")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private function isExcludedDeliveryDate($dateTime): bool
+    {
+        $date = $dateTime->format("d/m/Y");
+
+        foreach ($this->excludedDeliveryDates as $excludedDate) {
             if ($date == $excludedDate->format("d/m/Y")) {
                 return true;
             }
