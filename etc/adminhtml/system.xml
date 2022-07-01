@@ -28,10 +28,11 @@
                 <depends>
                     <field id="simpledeliverydate/general/status">1</field>
                 </depends>
-                <field id="working_days" translate="label" type="multiselect" showInDefault="1" showInWebsite="1"
+                <field id="company_work_days" translate="label" type="multiselect" showInDefault="1" showInWebsite="1"
                        showInStore="1" sortOrder="10">
-                    <label>Working Days</label>
+                    <label>Company work days</label>
                     <source_model>Magento\Config\Model\Config\Source\Locale\Weekdays</source_model>
+                    <validate>required-entry</validate>
                 </field>
 
                 <field id="days_needed_for_processing_the_order" type="text" translate="label"
@@ -60,9 +61,9 @@
                 <depends>
                     <field id="simpledeliverydate/general/status">1</field>
                 </depends>
-                <field id="delivery_days" translate="label" type="multiselect" showInDefault="1" showInWebsite="1"
+                <field id="delivery_work_days" translate="label" type="multiselect" showInDefault="1" showInWebsite="1"
                        showInStore="1" sortOrder="10">
-                    <label>Delivery Days</label>
+                    <label>Delivery work days</label>
                     <source_model>Magento\Config\Model\Config\Source\Locale\Weekdays</source_model>
                     <validate>required-entry</validate>
                 </field>

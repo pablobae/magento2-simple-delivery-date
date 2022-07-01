@@ -24,12 +24,12 @@ class Configuration extends AbstractHelper
 
     const XML_PATH_FIELD_STATUS = 'status';
 
-    const XML_PATH_FIELD_WORKING_DAYS = 'working_days';
+    const XML_PATH_FIELD_WORKING_DAYS = 'company_work_days';
     const XML_PATH_FIELD_DAYS_NEEDED_FOR_PROCESSING = 'days_needed_for_processing_the_order';
     const XML_PATH_FIELD_PROCESS_ORDER_TODAY_TIME_LIMIT = 'process_order_today_time_limit';
     const XML_PATH_FIELD_EXCLUDED_PROCESSING_DATES = 'excluded_processing_dates';
 
-    const XML_PATH_FIELD_DAYS_WITH_DELIVERY = 'delivery_days';
+    const XML_PATH_FIELD_DAYS_WITH_DELIVERY = 'delivery_work_days';
     const XML_PATH_FIELD_DAYS_NEEDED_FOR_DELIVERY = 'days_needed_for_delivery';
     const XML_PATH_FIELD_ENABLE_OPEN_DELIVERY_DATE = 'enable_open_delivery_date';
     const XML_PATH_FIELD_OPEN_DELIVERY_RANGE_DAYS = 'open_delivery_range_days';
@@ -158,20 +158,20 @@ class Configuration extends AbstractHelper
      * @param string $fieldPath
      * @return array
      */
-    protected function getExcludedDates(string $fieldPath): array
+    protected function getDatesFromSerializedConfigDates(string $fieldPath): array
     {
-        $excludedDates = [];
+        $dates = [];
 
         try {
             $storeId = $this->storeManager->getStore()->getId();
             $value = $this->getConfigValue($fieldPath, (int)$storeId);
             if ($value !== null) {
-                $excludedDates = $this->getDatesFromSerializedDates($value);
+                $dates = $this->getDatesFromSerializedDates($value);
             }
         } catch (NoSuchEntityException $e) {
             $this->_logger->critical($e->getMessage());
         }
-        return $excludedDates;
+        return $dates;
     }
 
 
@@ -195,11 +195,11 @@ class Configuration extends AbstractHelper
 
 
     /**
-     * Retrieve the list of working days
+     * Retrieve the list of work days of the company
      *
      * @return array
      */
-    public function getWorkingDays(): array
+    public function getCompanyWorkDays(): array
     {
         $fieldPath = self::XML_PATH_SECTION . self::XML_PATH_GROUP_PROCESSING . self::XML_PATH_FIELD_WORKING_DAYS;
         return $this->getArrayFromStringConfigValue($fieldPath);
@@ -249,7 +249,7 @@ class Configuration extends AbstractHelper
     public function getExcludedProcessingDates(): array
     {
         $fieldPath = self::XML_PATH_SECTION . self::XML_PATH_GROUP_PROCESSING . self::XML_PATH_FIELD_EXCLUDED_PROCESSING_DATES;
-        return $this->getExcludedDates($fieldPath);
+        return $this->getDatesFromSerializedConfigDates($fieldPath);
     }
 
 
@@ -259,7 +259,7 @@ class Configuration extends AbstractHelper
     /**
      * Days with Delivery
      */
-    public function getDeliveryDays(): array
+    public function getDeliveryWorkDays(): array
     {
         $fieldPath = self::XML_PATH_SECTION . self::XML_PATH_GROUP_DELIVERY . self::XML_PATH_FIELD_DAYS_WITH_DELIVERY;
         return $this->getArrayFromStringConfigValue($fieldPath);
@@ -282,7 +282,7 @@ class Configuration extends AbstractHelper
      *
      * @return bool
      */
-    public function isOpenDeliveryDateEnabled(): bool
+    public function isEnabledOpenDeliveryDate(): bool
     {
         $fieldPath = self::XML_PATH_SECTION . self::XML_PATH_GROUP_DELIVERY . self::XML_PATH_FIELD_ENABLE_OPEN_DELIVERY_DATE;
         return $this->getBoolConfigValue($fieldPath);
@@ -313,15 +313,17 @@ class Configuration extends AbstractHelper
 
 
     /**
-     * Retrieves excluded delivery dates
+     * Retrieves excluded delivery dates configuration
      *
      * @return array
      */
     public function getExcludedDeliveryDates(): array
     {
         $fieldPath = self::XML_PATH_SECTION . self::XML_PATH_GROUP_DELIVERY . self::XML_PATH_FIELD_EXCLUDED_DELIVERY_DATES;
-        return $this->getExcludedDates($fieldPath);
+        return $this->getDatesFromSerializedConfigDates($fieldPath);
     }
+
+
 
 
     /**** FRONTEND SETTINGS ****/
@@ -365,4 +367,5 @@ class Configuration extends AbstractHelper
         }
         return $dates;
     }
+
 }

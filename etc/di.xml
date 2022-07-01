@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+
+    <!-- Preference definitions -->
+    <preference for="Pablobae\SimpleDeliveryDate\Model\DeliveryDateServiceInterface" type="Pablobae\SimpleDeliveryDate\Model\DeliveryDateService"/>
+    <preference for="Pablobae\SimpleDeliveryDate\Model\CarrierInfoServiceInterface" type="Pablobae\SimpleDeliveryDate\Model\CarrierInfoService"/>
+    <preference for="Pablobae\SimpleDeliveryDate\Model\CompanyProcessInfoServiceInterface" type="Pablobae\SimpleDeliveryDate\Model\CompanyProcessInfoService"/>
+</config>
