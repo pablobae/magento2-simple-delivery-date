@@ -37,9 +37,9 @@
 
                 <field id="days_needed_for_processing_the_order" type="text" translate="label"
                        showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="10">
-                    <label>Days needed for processing</label>
+                    <label>Days needed for order processing</label>
                     <validate>required-entry validate-not-negative-number</validate>
-                    <comment>Number of days needed for preparing the order before sending it</comment>
+                    <comment>Number of days needed for preparing the order before sending it. 0 means that the order is ready to be sent as soon as is placed</comment>
                 </field>
 
                 <field id="process_order_today_time_limit" type="time" translate="label"
@@ -63,7 +63,7 @@
                 </depends>
                 <field id="delivery_work_days" translate="label" type="multiselect" showInDefault="1" showInWebsite="1"
                        showInStore="1" sortOrder="10">
-                    <label>Delivery work days</label>
+                    <label>Carrier work days</label>
                     <source_model>Magento\Config\Model\Config\Source\Locale\Weekdays</source_model>
                     <validate>required-entry</validate>
                 </field>
@@ -71,14 +71,15 @@
                 <field id="days_needed_for_delivery" type="text" translate="label"
                        showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="10">
                     <label>Days needed for delivery</label>
+                    <comment>Number of days needed by the carrier to deliver the order</comment>
                     <validate>required-entry validate-not-negative-number</validate>
                 </field>
 
                 <field id="enable_open_delivery_date" type="select" translate="label"
                        showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="10">
                     <label>Open delivery date</label>
-                    <comment>Enables/disables the open delivery date with a range of days between which delivery will
-                        take place.
+                    <comment>Enables/disables the open delivery date: a range of dates between which delivery will
+                        take place is displayed instead of displaying just a specific delivery date
                     </comment>
                     <source_model>Magento\Config\Model\Config\Source\Enabledisable</source_model>
                     <validate>required-entry</validate>
